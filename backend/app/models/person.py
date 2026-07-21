@@ -1,0 +1,22 @@
+from sqlalchemy import Boolean, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database import Base
+from app.models.mixins import TimestampMixin
+
+
+class Person(Base, TimestampMixin):
+    """An employee / person who incurs expenses and receives salary."""
+
+    __tablename__ = "persons"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), index=True, nullable=False)
+    role: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    department: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    passport_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    expenses = relationship("Expense", back_populates="person", cascade="all, delete-orphan")
+    salaries = relationship("Salary", back_populates="person", cascade="all, delete-orphan")

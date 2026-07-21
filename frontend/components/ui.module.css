@@ -1,0 +1,44 @@
+.statGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 1000px) { .statGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .statGrid { grid-template-columns: 1fr; } }
+
+.stat {
+  background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+}
+.stat .icon {
+  width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 14px;
+}
+.stat .label { font-size: 12.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.stat .value { font-size: 25px; font-weight: 800; margin-top: 4px; letter-spacing: -0.02em; color: var(--ink); }
+.stat .value .cur { font-size: 14px; font-weight: 700; color: var(--muted); margin-right: 4px; }
+.stat .foot { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+.grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+.panelHead { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.panelHead h3 { font-size: 15.5px; }
+
+/* bar list */
+.barRow { display: flex; align-items: center; gap: 12px; padding: 11px 20px; }
+.barRow .nm { width: 130px; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barTrack { flex: 1; height: 10px; background: #eef1f6; border-radius: 999px; overflow: hidden; }
+.barFill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+.barRow .amt { width: 110px; text-align: right; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* trend chart */
+.chartCard { padding: 6px 6px 14px; }
+.legend { display: flex; gap: 16px; padding: 0 20px 8px; flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.legend i { width: 11px; height: 11px; border-radius: 3px; }
+
+/* toolbar */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.searchBox { position: relative; }
+.searchBox svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.searchBox input { padding-left: 38px; min-width: 240px; }
+
+/* detail drawer list */
+.detailRow { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eef1f6; font-size: 14px; }
+.detailRow:last-child { border-bottom: none; }

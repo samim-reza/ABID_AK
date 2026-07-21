@@ -1,0 +1,56 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    image: abidak-backend:latest
+    container_name: abidak-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    expose:
+      - "8000"
+    networks:
+      - abidak
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Empty = call the API on the same origin; nginx proxies /api to the backend.
+        NEXT_PUBLIC_API_URL: ""
+    image: abidak-frontend:latest
+    container_name: abidak-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+    networks:
+      - abidak
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: abidak-nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+    networks:
+      - abidak
+
+networks:
+  abidak:
+    driver: bridge
