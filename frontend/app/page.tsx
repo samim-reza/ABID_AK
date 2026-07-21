@@ -124,6 +124,32 @@ export default function LandingPage() {
             </button>
           </form>
 
+          <div className={styles.mobileInfo}>
+            <div className={styles.ceoCard}>
+              <div className={styles.ceoAvatar}>AC</div>
+              <div>
+                <div className={styles.ceoName}>{COMPANY.ceoName}</div>
+                <div className={styles.ceoRole}>{COMPANY.ceoRole}</div>
+              </div>
+            </div>
+
+            <div className={styles.contactRow}>
+              <span className={styles.contactItem}><Icon name="phone" size={15} /> {COMPANY.phone}</span>
+              <span className={styles.contactItem}><Icon name="mail" size={15} /> {COMPANY.email}</span>
+              <span className={styles.contactItem}><Icon name="globe" size={15} /> {COMPANY.website}</span>
+              <span className={styles.contactItem}><Icon name="pin" size={15} /> {COMPANY.address}</span>
+            </div>
+
+            <div className={styles.qrBlock}>
+              <div className={styles.qrBox}>
+                <img src="/brand/qr.png" alt="Company contact QR code" />
+              </div>
+              <div className={styles.qrText}>
+                Scan to connect with ABID AK Contracting Company on WhatsApp.
+              </div>
+            </div>
+          </div>
+
           <div className={styles.footNote}>
             © {new Date().getFullYear()} {COMPANY.name} · {COMPANY.fullAddress}
           </div>
