@@ -21,6 +21,8 @@ export default function WorkersPage() {
   const [companyId, setCompanyId] = useState<number | "">("");
   const [projectId, setProjectId] = useState<number | "">("");
   const [q, setQ] = useState("");
+  const [iqamaStatus, setIqamaStatus] = useState("");
+  const [releaseStatus, setReleaseStatus] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Page<Worker> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,11 +48,12 @@ export default function WorkersPage() {
     setLoading(true);
     api.get<Page<Worker>>("/api/workers", {
       q: q || undefined, company_id: companyId || undefined, project_id: projectId || undefined,
+      iqama_status: iqamaStatus || undefined, release_status: releaseStatus || undefined,
       page, page_size: 20,
     }).then(setData).finally(() => setLoading(false));
-  }, [q, companyId, projectId, page]);
+  }, [q, companyId, projectId, iqamaStatus, releaseStatus, page]);
   useEffect(load, [load]);
-  useEffect(() => setPage(1), [q, companyId, projectId]);
+  useEffect(() => setPage(1), [q, companyId, projectId, iqamaStatus, releaseStatus]);
 
   // reset project filter if it no longer belongs to the chosen company
   useEffect(() => {
@@ -101,6 +104,17 @@ export default function WorkersPage() {
           <select className="select" style={{ width: "auto" }} value={projectId} onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : "")} disabled={!companyId}>
             <option value="">{companyId ? "All projects" : "All projects"}</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <select className="select" style={{ width: "auto" }} value={iqamaStatus} onChange={(e) => setIqamaStatus(e.target.value)}>
+            <option value="">All iqama</option>
+            <option value="expired">Iqama expired</option>
+            <option value="expiring">Expiring soon (30d)</option>
+            <option value="valid">Iqama valid</option>
+          </select>
+          <select className="select" style={{ width: "auto" }} value={releaseStatus} onChange={(e) => setReleaseStatus(e.target.value)}>
+            <option value="">All status</option>
+            <option value="active">Active</option>
+            <option value="released">Released</option>
           </select>
           <div className={ui.searchBox}>
             <Icon name="search" size={17} />

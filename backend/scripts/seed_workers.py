@@ -148,11 +148,12 @@ def main(xlsx_path: Path) -> None:
                     hours = 208
                     basic = round(rate * hours, 2)
                     overtime = round(rate * 1.5 * ((worker.id % 5) * 4), 2)  # 0–16 OT h
+                    ot_hours = round(overtime / rate, 2) if rate else 0
                     advance = parse_advance(remark)
                     db.add(
                         WorkerSalary(
                             worker_id=worker.id, year=PAY_YEAR, month=PAY_MONTH,
-                            basic_amount=basic, overtime_amount=overtime,
+                            basic_amount=basic, overtime_hours=ot_hours, overtime_amount=overtime,
                             advance_amount=advance, hours=hours,
                             paid=(worker.id % 3 != 0),  # ~2/3 marked paid
                             pay_date=date(PAY_YEAR, PAY_MONTH, 28),

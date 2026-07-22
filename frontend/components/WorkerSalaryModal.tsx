@@ -4,6 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { COMPANY } from "@/lib/brand";
 import { money, monthName, todayISO } from "@/lib/format";
+import {
+  calcOvertimeAmount,
+  defaultBasic,
+  overtimeHourlyRate,
+  overtimeHoursFromAmount,
+} from "@/lib/payroll";
 import type { Worker, WorkerSalary } from "@/lib/types";
 import Modal from "./Modal";
 import Icon from "./Icons";
@@ -23,7 +29,7 @@ export default function WorkerSalaryModal({ worker, onClose, onSaved }: Props) {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [records, setRecords] = useState<WorkerSalary[]>([]);
   const [basic, setBasic] = useState("");
-  const [overtime, setOvertime] = useState("");
+  const [overtimeHours, setOvertimeHours] = useState("");
   const [advance, setAdvance] = useState("");
   const [hours, setHours] = useState("");
   const [paid, setPaid] = useState(false);
@@ -42,32 +48,28 @@ export default function WorkerSalaryModal({ worker, onClose, onSaved }: Props) {
     const r = records.find((x) => x.month === month && x.year === year);
     if (r) {
       setBasic(String(r.basic_amount));
-      setOvertime(String(r.overtime_amount));
+      const otH = r.overtime_hours ?? overtimeHoursFromAmount(worker.pay_type, worker.base_rate, r.overtime_amount);
+      setOvertimeHours(otH != null ? String(otH) : "");
       setAdvance(String(r.advance_amount));
       setHours(r.hours != null ? String(r.hours) : "");
       setPaid(r.paid);
       setPayDate(r.pay_date ?? todayISO());
       setNote(r.note ?? "");
     } else {
-      setBasic(worker.pay_type === "monthly" && worker.base_rate ? String(worker.base_rate) : "");
-      setOvertime(""); setAdvance(""); setHours(""); setPaid(false);
+      const suggested = defaultBasic(worker.pay_type, worker.base_rate);
+      setBasic(suggested ? String(suggested) : "");
+      setOvertimeHours(""); setAdvance(""); setHours(""); setPaid(false);
       setPayDate(todayISO()); setNote("");
     }
   }, [records, month, year, worker]);
 
   const b = parseFloat(basic) || 0;
-  const ot = parseFloat(overtime) || 0;
+  const otH = parseFloat(overtimeHours) || 0;
+  const ot = calcOvertimeAmount(worker.pay_type, worker.base_rate, otH);
   const adv = parseFloat(advance) || 0;
   const net = b + ot - adv;
-
-  // for per-hour workers, basic = hours × hourly rate, computed as hours are entered
-  function onHoursChange(value: string) {
-    setHours(value);
-    if (worker.pay_type === "hourly") {
-      const h = parseFloat(value);
-      setBasic(value === "" || Number.isNaN(h) ? "" : String(+(h * (worker.base_rate || 0)).toFixed(2)));
-    }
-  }
+  const otRate = overtimeHourlyRate(worker.pay_type, worker.base_rate);
+  const payLabel = worker.pay_type === "hourly" ? "hourly" : "monthly";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,7 +77,9 @@ export default function WorkerSalaryModal({ worker, onClose, onSaved }: Props) {
     try {
       await api.put<WorkerSalary>("/api/workers/salaries", {
         worker_id: worker.id, year, month,
-        basic_amount: b, overtime_amount: ot, advance_amount: adv,
+        basic_amount: b,
+        overtime_hours: overtimeHours ? otH : null,
+        advance_amount: adv,
         hours: hours ? parseFloat(hours) : null,
         paid, pay_date: payDate || null, note: note || null,
       });
@@ -140,12 +144,23 @@ export default function WorkerSalaryModal({ worker, onClose, onSaved }: Props) {
         <div className="form-grid">
           <div className="field">
             <label>Basic amount ({COMPANY.currency})</label>
-            <input className="input" type="number" step="0.01" min="0" value={basic} onChange={(e) => setBasic(e.target.value)} placeholder="0.00" readOnly={worker.pay_type === "hourly"} />
-            {worker.pay_type === "hourly" && <span className="hint">Calculated from hours × {COMPANY.currency} {money(worker.base_rate)}/hr.</span>}
+            <input className="input" type="number" step="0.01" min="0" value={basic} onChange={(e) => setBasic(e.target.value)} placeholder="0.00" />
+            <span className="hint">
+              {worker.pay_type === "hourly"
+                ? `Default: ${COMPANY.currency} ${money(worker.base_rate)}/hr × 260. Adjust if needed.`
+                : `Default monthly salary. Adjust if needed.`}
+              <span className="muted"> · {payLabel}</span>
+            </span>
           </div>
           <div className="field">
-            <label>Overtime ({COMPANY.currency})</label>
-            <input className="input" type="number" step="0.01" min="0" value={overtime} onChange={(e) => setOvertime(e.target.value)} placeholder="0.00" />
+            <label>Overtime (hours)</label>
+            <input className="input" type="number" step="0.1" min="0" value={overtimeHours} onChange={(e) => setOvertimeHours(e.target.value)} placeholder="0" />
+            {otH > 0 && (
+              <span className="hint">
+                = {COMPANY.currency} {money(ot)} at {COMPANY.currency} {money(otRate)}/hr
+                {worker.pay_type === "monthly" && <span className="muted"> (salary ÷ 260)</span>}
+              </span>
+            )}
           </div>
         </div>
         <div className="form-grid">
@@ -155,8 +170,8 @@ export default function WorkerSalaryModal({ worker, onClose, onSaved }: Props) {
             <span className="hint">Deducted from the salary total.</span>
           </div>
           <div className="field">
-            <label>Hours {worker.pay_type === "hourly" ? "(worked)" : "(optional)"}</label>
-            <input className="input" type="number" step="0.1" min="0" value={hours} onChange={(e) => onHoursChange(e.target.value)} placeholder="e.g. 208" />
+            <label>Hours worked (optional)</label>
+            <input className="input" type="number" step="0.1" min="0" value={hours} onChange={(e) => setHours(e.target.value)} placeholder="e.g. 260" />
           </div>
         </div>
 
@@ -192,22 +207,26 @@ export default function WorkerSalaryModal({ worker, onClose, onSaved }: Props) {
           <div className="table-wrap">
             <table className="data">
               <thead>
-                <tr><th>Month</th><th className="num">Basic</th><th className="num">OT</th><th className="num">Advance</th><th className="num">Net</th><th>Status</th><th></th></tr>
+                <tr><th>Month</th><th className="num">Basic</th><th className="num">OT hrs</th><th className="num">OT</th><th className="num">Advance</th><th className="num">Net</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
-                {records.map((r) => (
-                  <tr key={r.id} style={{ cursor: "pointer" }} onClick={() => { setMonth(r.month); setYear(r.year); }}>
-                    <td className="strong">{monthName(r.month)}</td>
-                    <td className="num">{money(r.basic_amount)}</td>
-                    <td className="num">{money(r.overtime_amount)}</td>
-                    <td className="num text-orange">{r.advance_amount ? `−${money(r.advance_amount)}` : "—"}</td>
-                    <td className="num strong">{money(r.net_amount)}</td>
-                    <td>{r.paid ? <span className="badge badge-green">Paid</span> : <span className="badge badge-amber">Unpaid</span>}</td>
-                    <td>
-                      <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); remove(r.id); }}><Icon name="trash" size={14} /></button>
-                    </td>
-                  </tr>
-                ))}
+                {records.map((r) => {
+                  const h = r.overtime_hours ?? overtimeHoursFromAmount(worker.pay_type, worker.base_rate, r.overtime_amount);
+                  return (
+                    <tr key={r.id} style={{ cursor: "pointer" }} onClick={() => { setMonth(r.month); setYear(r.year); }}>
+                      <td className="strong">{monthName(r.month)}</td>
+                      <td className="num">{money(r.basic_amount)}</td>
+                      <td className="num">{h != null ? h : "—"}</td>
+                      <td className="num">{money(r.overtime_amount)}</td>
+                      <td className="num text-orange">{r.advance_amount ? `−${money(r.advance_amount)}` : "—"}</td>
+                      <td className="num strong">{money(r.net_amount)}</td>
+                      <td>{r.paid ? <span className="badge badge-green">Paid</span> : <span className="badge badge-amber">Unpaid</span>}</td>
+                      <td>
+                        <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); remove(r.id); }}><Icon name="trash" size={14} /></button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

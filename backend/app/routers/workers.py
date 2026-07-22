@@ -26,9 +26,31 @@ from app.schemas.worker import (
 
 router = APIRouter(prefix="/workers", tags=["workers"], dependencies=[Depends(get_current_user)])
 
+MONTHLY_HOURS = 260
+
 
 def _net(basic: float, overtime: float, advance: float) -> float:
     return float(basic) + float(overtime) - float(advance)
+
+
+def _default_basic(worker: Worker) -> float:
+    rate = float(worker.base_rate)
+    if worker.pay_type == "hourly":
+        return round(rate * MONTHLY_HOURS, 2)
+    return rate
+
+
+def _overtime_hourly_rate(worker: Worker) -> float:
+    rate = float(worker.base_rate)
+    if worker.pay_type == "hourly":
+        return rate
+    return rate / MONTHLY_HOURS
+
+
+def _calc_overtime_amount(worker: Worker, overtime_hours: float | None) -> float:
+    if not overtime_hours:
+        return 0.0
+    return round(_overtime_hourly_rate(worker) * overtime_hours, 2)
 
 
 # ======================================================================
@@ -169,6 +191,8 @@ def list_workers(
     company_id: int | None = None,
     project_id: int | None = None,
     include_released: bool = True,
+    iqama_status: str | None = None,
+    release_status: str | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> Page[WorkerOut]:
@@ -181,6 +205,25 @@ def list_workers(
         stmt = stmt.where(Worker.project_id == project_id)
     if not include_released:
         stmt = stmt.where(Worker.is_released.is_(False))
+    if release_status == "released":
+        stmt = stmt.where(Worker.is_released.is_(True))
+    elif release_status == "active":
+        stmt = stmt.where(Worker.is_released.is_(False))
+    if iqama_status:
+        today = date.today()
+        soon = date.fromordinal(today.toordinal() + 30)
+        if iqama_status == "expired":
+            stmt = stmt.where(Worker.iqama_expiry.is_not(None), Worker.iqama_expiry < today)
+        elif iqama_status == "expiring":
+            stmt = stmt.where(
+                Worker.iqama_expiry.is_not(None),
+                Worker.iqama_expiry >= today,
+                Worker.iqama_expiry <= soon,
+            )
+        elif iqama_status == "valid":
+            stmt = stmt.where(
+                Worker.iqama_expiry.is_(None) | (Worker.iqama_expiry > soon)
+            )
     if q:
         like = f"%{q}%"
         stmt = stmt.where(
@@ -339,7 +382,8 @@ def upsert_salary(
         )
         db.add(salary)
     salary.basic_amount = payload.basic_amount
-    salary.overtime_amount = payload.overtime_amount
+    salary.overtime_hours = payload.overtime_hours
+    salary.overtime_amount = _calc_overtime_amount(worker, payload.overtime_hours)
     salary.advance_amount = payload.advance_amount
     salary.hours = payload.hours
     salary.paid = payload.paid
@@ -409,11 +453,13 @@ def payroll(
             company_name=w.company.name if w.company else None,
             project_name=w.project.name if w.project else None,
             pay_type=w.pay_type, base_rate=float(w.base_rate), is_released=w.is_released,
+            suggested_basic=_default_basic(w),
         )
         if s:
             row.salary_id = s.id
             row.has_record = True
             row.basic_amount = float(s.basic_amount)
+            row.overtime_hours = float(s.overtime_hours) if s.overtime_hours is not None else None
             row.overtime_amount = float(s.overtime_amount)
             row.advance_amount = float(s.advance_amount)
             row.net_amount = _net(s.basic_amount, s.overtime_amount, s.advance_amount)

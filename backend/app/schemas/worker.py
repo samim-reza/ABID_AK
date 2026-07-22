@@ -90,7 +90,7 @@ class WorkerSalaryUpsert(BaseModel):
     year: int = Field(ge=2000, le=2100)
     month: int = Field(ge=1, le=12)
     basic_amount: float = Field(default=0, ge=0)
-    overtime_amount: float = Field(default=0, ge=0)
+    overtime_hours: float | None = Field(default=None, ge=0)
     advance_amount: float = Field(default=0, ge=0)
     hours: float | None = Field(default=None, ge=0)
     paid: bool = False
@@ -106,6 +106,7 @@ class WorkerSalaryOut(BaseModel):
     year: int
     month: int
     basic_amount: float
+    overtime_hours: float | None
     overtime_amount: float
     advance_amount: float
     hours: float | None
@@ -127,7 +128,9 @@ class PayrollRow(BaseModel):
     base_rate: float = 0
     is_released: bool
     salary_id: int | None = None
+    suggested_basic: float = 0
     basic_amount: float = 0
+    overtime_hours: float | None = None
     overtime_amount: float = 0
     advance_amount: float = 0
     net_amount: float = 0

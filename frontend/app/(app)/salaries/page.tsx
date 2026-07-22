@@ -55,12 +55,15 @@ export default function PayrollPage() {
   }, [projects, projectId]);
 
   const totals = rows.reduce(
-    (a, r) => ({
-      net: a.net + r.net_amount,
-      paid: a.paid + (r.paid ? r.net_amount : 0),
-      unpaid: a.unpaid + (!r.paid ? r.net_amount : 0),
-      advance: a.advance + r.advance_amount,
-    }),
+    (a, r) => {
+      const net = r.has_record ? r.net_amount : r.suggested_basic;
+      return {
+        net: a.net + net,
+        paid: a.paid + (r.paid ? r.net_amount : 0),
+        unpaid: a.unpaid + (!r.paid ? net : 0),
+        advance: a.advance + r.advance_amount,
+      };
+    },
     { net: 0, paid: 0, unpaid: 0, advance: 0 }
   );
   const paidCount = rows.filter((r) => r.paid).length;
@@ -126,10 +129,26 @@ export default function PayrollPage() {
                         <div className="strong">{r.company_name}</div>
                         <div className="tiny muted">{r.project_name}</div>
                       </td>
-                      <td className="num">{r.has_record ? money(r.basic_amount) : <span className="muted">—</span>}</td>
-                      <td className="num">{r.has_record ? money(r.overtime_amount) : <span className="muted">—</span>}</td>
+                      <td className="num">
+                        {money(r.has_record ? r.basic_amount : r.suggested_basic)}
+                        <div className="tiny muted">{r.pay_type === "hourly" ? "hourly × 260" : "monthly"}</div>
+                      </td>
+                      <td className="num">
+                        {r.has_record ? (
+                          <>
+                            {money(r.overtime_amount)}
+                            {r.overtime_hours != null && r.overtime_hours > 0 && (
+                              <div className="tiny muted">{r.overtime_hours}h</div>
+                            )}
+                          </>
+                        ) : <span className="muted">—</span>}
+                      </td>
                       <td className="num text-orange">{r.advance_amount ? `−${money(r.advance_amount)}` : <span className="muted">—</span>}</td>
-                      <td className="num strong">{r.has_record ? money(r.net_amount) : <span className="muted">—</span>}</td>
+                      <td className="num strong">
+                        {r.has_record
+                          ? money(r.net_amount)
+                          : <span className="muted">{money(r.suggested_basic)}</span>}
+                      </td>
                       <td>
                         {!r.has_record
                           ? <span className="badge badge-gray">No record</span>

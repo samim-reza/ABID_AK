@@ -66,6 +66,7 @@ export interface WorkerSalary {
   year: number;
   month: number;
   basic_amount: number;
+  overtime_hours: number | null;
   overtime_amount: number;
   advance_amount: number;
   hours: number | null;
@@ -85,7 +86,9 @@ export interface PayrollRow {
   base_rate: number;
   is_released: boolean;
   salary_id: number | null;
+  suggested_basic: number;
   basic_amount: number;
+  overtime_hours: number | null;
   overtime_amount: number;
   advance_amount: number;
   net_amount: number;

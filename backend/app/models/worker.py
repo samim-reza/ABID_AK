@@ -61,6 +61,7 @@ class WorkerSalary(Base, TimestampMixin):
     month: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
 
     basic_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    overtime_hours: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     overtime_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     advance_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     # hours worked (used for hourly workers; informational for monthly)
