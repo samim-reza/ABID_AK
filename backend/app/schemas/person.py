@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -6,6 +8,8 @@ class PersonBase(BaseModel):
     role: str = ""
     department: str = ""
     passport_number: str | None = None
+    iqama_number: str | None = None
+    iqama_expiry: date | None = None
     phone: str | None = None
     email: str | None = None
     # "inside" = works in the office, "outside" = outside-office worker
@@ -22,6 +26,8 @@ class PersonUpdate(BaseModel):
     role: str | None = None
     department: str | None = None
     passport_number: str | None = None
+    iqama_number: str | None = None
+    iqama_expiry: date | None = None
     phone: str | None = None
     email: str | None = None
     location: str | None = None

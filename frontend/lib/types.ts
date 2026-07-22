@@ -20,6 +20,8 @@ export interface Person {
   role: string;
   department: string;
   passport_number: string | null;
+  iqama_number: string | null;
+  iqama_expiry: string | null;
   phone: string | null;
   email: string | null;
   location: "inside" | "outside";

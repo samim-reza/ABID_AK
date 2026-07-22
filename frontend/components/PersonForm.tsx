@@ -20,6 +20,8 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
   const [role, setRole] = useState(editing?.role ?? "");
   const [department, setDepartment] = useState(editing?.department ?? "");
   const [passport, setPassport] = useState(editing?.passport_number ?? "");
+  const [iqama, setIqama] = useState(editing?.iqama_number ?? "");
+  const [iqamaExpiry, setIqamaExpiry] = useState(editing?.iqama_expiry ?? "");
   const [phone, setPhone] = useState(editing?.phone ?? "");
   const [email, setEmail] = useState(editing?.email ?? "");
   const [location, setLocation] = useState<"inside" | "outside">(editing?.location ?? "inside");
@@ -42,7 +44,10 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
     setSaving(true);
     const payload = {
       name: name.trim(), role, department,
-      passport_number: passport || null, phone: phone || null,
+      passport_number: passport || null,
+      iqama_number: iqama || null,
+      iqama_expiry: iqamaExpiry || null,
+      phone: phone || null,
       email: email || null, location, is_active: active,
     };
     try {
@@ -96,21 +101,30 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
             <input className="input" value={passport} onChange={(e) => setPassport(e.target.value)} placeholder="e.g. A1234567" />
           </div>
           <div className="field">
+            <label>Iqama number</label>
+            <input className="input" value={iqama} onChange={(e) => setIqama(e.target.value)} placeholder="e.g. 2xxxxxxxxx" />
+          </div>
+        </div>
+        <div className="field">
+          <label>Iqama expiry date</label>
+          <input className="input" type="date" value={iqamaExpiry} onChange={(e) => setIqamaExpiry(e.target.value)} />
+          <span className="hint">Rows turn red once the iqama is expired.</span>
+        </div>
+        <div className="form-grid">
+          <div className="field">
             <label>Phone</label>
             <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05x xxx xxxx" />
           </div>
-        </div>
-        <div className="form-grid">
           <div className="field">
             <label>Email</label>
             <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" />
           </div>
-          <div className="field">
-            <label>Work location</label>
-            <div className="segmented" style={{ width: "100%" }}>
-              <button type="button" style={{ flex: 1 }} className={location === "inside" ? "active" : ""} onClick={() => setLocation("inside")}>Inside office</button>
-              <button type="button" style={{ flex: 1 }} className={location === "outside" ? "active" : ""} onClick={() => setLocation("outside")}>Outside office</button>
-            </div>
+        </div>
+        <div className="field">
+          <label>Work location</label>
+          <div className="segmented" style={{ width: "100%" }}>
+            <button type="button" style={{ flex: 1 }} className={location === "inside" ? "active" : ""} onClick={() => setLocation("inside")}>Inside office</button>
+            <button type="button" style={{ flex: 1 }} className={location === "outside" ? "active" : ""} onClick={() => setLocation("outside")}>Outside office</button>
           </div>
         </div>
         <label className="row gap-8" style={{ cursor: "pointer", fontSize: 14 }}>

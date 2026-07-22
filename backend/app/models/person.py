@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, String
+from datetime import date
+
+from sqlalchemy import Boolean, Date, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -15,6 +17,8 @@ class Person(Base, TimestampMixin):
     role: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     department: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     passport_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    iqama_number: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    iqama_expiry: Mapped[date | None] = mapped_column(Date, nullable=True)
     phone: Mapped[str | None] = mapped_column(String(40), nullable=True)
     email: Mapped[str | None] = mapped_column(String(160), nullable=True)
     # where this office-staff member works: "inside" (in the office) or "outside"

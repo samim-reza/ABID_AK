@@ -96,6 +96,8 @@ def ensure_schema(db: Session) -> None:
         "ADD COLUMN IF NOT EXISTS location VARCHAR(20) NOT NULL DEFAULT 'inside'",
         "ALTER TABLE worker_salaries "
         "ADD COLUMN IF NOT EXISTS overtime_hours NUMERIC(10, 2)",
+        "ALTER TABLE persons ADD COLUMN IF NOT EXISTS iqama_number VARCHAR(64)",
+        "ALTER TABLE persons ADD COLUMN IF NOT EXISTS iqama_expiry DATE",
     )
     for stmt in statements:
         try:

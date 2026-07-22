@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -17,6 +19,7 @@ def list_persons(
     db: Session = Depends(get_db),
     q: str | None = None,
     location: str | None = None,
+    iqama_status: str | None = None,
     active_only: bool = False,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -27,10 +30,26 @@ def list_persons(
         stmt = stmt.where(
             Person.name.ilike(like)
             | Person.passport_number.ilike(like)
+            | Person.iqama_number.ilike(like)
             | Person.email.ilike(like)
         )
     if location in ("inside", "outside"):
         stmt = stmt.where(Person.location == location)
+    if iqama_status:
+        today = date.today()
+        soon = date.fromordinal(today.toordinal() + 30)
+        if iqama_status == "expired":
+            stmt = stmt.where(Person.iqama_expiry.is_not(None), Person.iqama_expiry < today)
+        elif iqama_status == "expiring":
+            stmt = stmt.where(
+                Person.iqama_expiry.is_not(None),
+                Person.iqama_expiry >= today,
+                Person.iqama_expiry <= soon,
+            )
+        elif iqama_status == "valid":
+            stmt = stmt.where(
+                Person.iqama_expiry.is_(None) | (Person.iqama_expiry > soon)
+            )
     if active_only:
         stmt = stmt.where(Person.is_active.is_(True))
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
