@@ -50,6 +50,25 @@ export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// true when the given date (yyyy-mm-dd) is strictly before today
+export function isExpired(iso: string | null | undefined): boolean {
+  if (!iso) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(iso) < today;
+}
+
+// true when the date is within `days` from now (but not yet expired)
+export function isExpiringSoon(iso: string | null | undefined, days = 30): boolean {
+  if (!iso) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const limit = new Date(today);
+  limit.setDate(limit.getDate() + days);
+  const d = new Date(iso);
+  return d >= today && d <= limit;
+}
+
 // deterministic accent colour for a label (persons / categories)
 export function accentFor(key: string): string {
   const palette = ["#f26f21", "#1b356b", "#2f9e6f", "#8e44ad", "#d98a0b", "#2a7fb8", "#c0392b", "#16a085"];

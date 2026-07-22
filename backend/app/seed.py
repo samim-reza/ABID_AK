@@ -84,15 +84,23 @@ def ensure_schema(db: Session) -> None:
 
     Base.metadata.create_all only creates missing tables, not new columns on
     tables that already exist. These guarded ALTERs keep older deployments in
-    sync without pulling in a full migration tool.
+    sync without pulling in a full migration tool. Each statement runs in its
+    own transaction so a no-op / unsupported dialect can't abort the rest.
     """
-    db.execute(
-        text(
-            "ALTER TABLE salaries "
-            "ADD COLUMN IF NOT EXISTS pay_type VARCHAR(20) NOT NULL DEFAULT 'salary'"
-        )
+    statements = (
+        "ALTER TABLE salaries "
+        "ADD COLUMN IF NOT EXISTS pay_type VARCHAR(20) NOT NULL DEFAULT 'salary'",
+        # Office-staff (persons) gained an email and an inside/outside-office location.
+        "ALTER TABLE persons ADD COLUMN IF NOT EXISTS email VARCHAR(160)",
+        "ALTER TABLE persons "
+        "ADD COLUMN IF NOT EXISTS location VARCHAR(20) NOT NULL DEFAULT 'inside'",
     )
-    db.commit()
+    for stmt in statements:
+        try:
+            db.execute(text(stmt))
+            db.commit()
+        except Exception:  # pragma: no cover - dialect/no-op differences
+            db.rollback()
 
 
 def run_seed(db: Session) -> None:

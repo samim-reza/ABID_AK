@@ -1,109 +1,147 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
-import { money, sar, formatDate, accentFor, initials } from "@/lib/format";
-import type { Page, Person, Salary } from "@/lib/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
+import { accentFor, initials, money, monthName } from "@/lib/format";
+import { COMPANY } from "@/lib/brand";
+import type { Company, PayrollRow, Worker } from "@/lib/types";
 import { PageLoader, EmptyState } from "@/components/Spinner";
-import Pagination from "@/components/Pagination";
-import MonthYearFilter from "@/components/MonthYearFilter";
-import SalaryForm, { PAY_TYPES } from "@/components/SalaryForm";
-import Confirm from "@/components/Confirm";
+import WorkerSalaryModal from "@/components/WorkerSalaryModal";
 import Icon from "@/components/Icons";
-import { useToast } from "@/components/Toast";
 import ui from "@/components/ui.module.css";
 
-export default function SalariesPage() {
-  const toast = useToast();
-  const [persons, setPersons] = useState<Person[]>([]);
-  const [years, setYears] = useState<number[]>([]);
-  const [data, setData] = useState<Page<Salary> | null>(null);
-  const [personId, setPersonId] = useState<number | "">("");
-  const [month, setMonth] = useState<number | "">("");
-  const [year, setYear] = useState<number | "">("");
-  const [page, setPage] = useState(1);
+const now = new Date();
+
+// build a Worker-shaped object for the payment modal from a payroll row
+function toWorker(r: PayrollRow): Worker {
+  return {
+    id: r.worker_id, name: r.name, nationality: r.nationality,
+    passport_number: null, iqama_number: null, iqama_expiry: null, phone: null,
+    company_id: 0, project_id: 0, pay_type: r.pay_type, base_rate: r.base_rate,
+    note: null, is_released: r.is_released, released_at: null,
+    company_name: r.company_name, project_name: r.project_name,
+  };
+}
+
+export default function PayrollPage() {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companyId, setCompanyId] = useState<number | "">("");
+  const [projectId, setProjectId] = useState<number | "">("");
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+  const [rows, setRows] = useState<PayrollRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<Salary | null>(null);
-  const [deleting, setDeleting] = useState<Salary | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [paying, setPaying] = useState<Worker | null>(null);
+
+  const projects = useMemo(
+    () => companies.find((c) => c.id === companyId)?.projects ?? [],
+    [companies, companyId]
+  );
 
   useEffect(() => {
-    api.get<Page<Person>>("/api/persons", { page_size: 100 }).then((r) => setPersons(r.items));
-    api.get<number[]>("/api/dashboard/periods").then(setYears).catch(() => {});
+    api.get<Company[]>("/api/workers/companies").then(setCompanies).catch(() => {});
   }, []);
 
   const load = useCallback(() => {
     setLoading(true);
-    api.get<Page<Salary>>("/api/salaries", { person_id: personId || undefined, month: month || undefined, year: year || undefined, page, page_size: 15 })
-      .then(setData).finally(() => setLoading(false));
-  }, [personId, month, year, page]);
+    api.get<PayrollRow[]>("/api/workers/payroll", {
+      year, month, company_id: companyId || undefined, project_id: projectId || undefined,
+    }).then(setRows).finally(() => setLoading(false));
+  }, [year, month, companyId, projectId]);
   useEffect(load, [load]);
-  useEffect(() => setPage(1), [personId, month, year]);
 
-  const pageTotal = data?.items.reduce((s, x) => s + Number(x.amount), 0) ?? 0;
+  useEffect(() => {
+    if (projectId && !projects.some((p) => p.id === projectId)) setProjectId("");
+  }, [projects, projectId]);
 
-  async function doDelete() {
-    if (!deleting) return;
-    setBusy(true);
-    try {
-      await api.delete(`/api/salaries/${deleting.id}`);
-      toast.success("Salary record deleted.");
-      setDeleting(null);
-      load();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Delete failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const totals = rows.reduce(
+    (a, r) => ({
+      net: a.net + r.net_amount,
+      paid: a.paid + (r.paid ? r.net_amount : 0),
+      unpaid: a.unpaid + (!r.paid ? r.net_amount : 0),
+      advance: a.advance + r.advance_amount,
+    }),
+    { net: 0, paid: 0, unpaid: 0, advance: 0 }
+  );
+  const paidCount = rows.filter((r) => r.paid).length;
+  const years = Array.from({ length: 6 }, (_, i) => now.getFullYear() - i);
 
   return (
     <>
       <div className={ui.toolbar}>
         <div className="row gap-8 wrap">
-          <select className="select" style={{ width: "auto" }} value={personId} onChange={(e) => setPersonId(e.target.value ? Number(e.target.value) : "")}>
-            <option value="">All employees</option>
-            {persons.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          <select className="select" style={{ width: "auto" }} value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+            {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{monthName(i + 1)}</option>)}
           </select>
-          <MonthYearFilter month={month} year={year} years={years} onMonth={setMonth} onYear={setYear} />
+          <select className="select" style={{ width: "auto" }} value={year} onChange={(e) => setYear(Number(e.target.value))}>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <select className="select" style={{ width: "auto" }} value={companyId} onChange={(e) => setCompanyId(e.target.value ? Number(e.target.value) : "")}>
+            <option value="">All companies</option>
+            {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select className="select" style={{ width: "auto" }} value={projectId} onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : "")} disabled={!companyId}>
+            <option value="">All projects</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditing(null); setShowForm(true); }}>
-          <Icon name="plus" size={17} /> Pay Salary
-        </button>
       </div>
 
-      {loading && !data ? (
+      <div className={ui.statGrid} style={{ marginBottom: 16, gridTemplateColumns: "repeat(4, 1fr)" }}>
+        <div className={ui.stat}><div className={ui.label}>Net Payroll</div><div className={ui.value}><span className="cur">SAR</span>{money(totals.net)}</div></div>
+        <div className={ui.stat}><div className={ui.label}>Paid</div><div className={ui.value} style={{ color: "var(--green)" }}><span className="cur">SAR</span>{money(totals.paid)}</div><div className={ui.foot}>{paidCount} of {rows.length} workers</div></div>
+        <div className={ui.stat}><div className={ui.label}>Unpaid</div><div className={ui.value} style={{ color: "var(--red)" }}><span className="cur">SAR</span>{money(totals.unpaid)}</div></div>
+        <div className={ui.stat}><div className={ui.label}>Advances</div><div className={ui.value} style={{ color: "var(--orange)" }}><span className="cur">SAR</span>{money(totals.advance)}</div></div>
+      </div>
+
+      {loading && rows.length === 0 ? (
         <PageLoader />
       ) : (
         <div className="card">
-          {!data || data.items.length === 0 ? (
-            <EmptyState title="No salary records" hint="Record a monthly salary to see it here." />
+          {rows.length === 0 ? (
+            <EmptyState title="No active workers" hint="Add workers, then record their monthly pay here." />
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>Date</th><th>Employee</th><th>Role</th><th>Type</th><th>Passport</th><th>Note</th><th className="num">Amount</th><th></th></tr>
+                  <tr>
+                    <th>Worker</th><th>Company / Project</th>
+                    <th className="num">Basic</th><th className="num">OT</th><th className="num">Advance</th><th className="num">Net</th>
+                    <th>{monthName(month)} {year}</th><th></th>
+                  </tr>
                 </thead>
                 <tbody>
-                  {data.items.map((s) => (
-                    <tr key={s.id}>
-                      <td className="small muted">{formatDate(s.pay_date)}</td>
+                  {rows.map((r) => (
+                    <tr key={r.worker_id}>
                       <td>
                         <div className="row gap-12">
-                          <div className="avatar" style={{ background: accentFor(s.person_name || "?") }}>{initials(s.person_name || "?")}</div>
-                          <span className="strong">{s.person_name}</span>
+                          <div className="avatar" style={{ background: accentFor(r.name) }}>{initials(r.name)}</div>
+                          <div>
+                            <div className="strong">{r.name}</div>
+                            <div className="tiny muted">{r.nationality || "—"} · {r.pay_type === "hourly" ? "per hour" : "monthly"}</div>
+                          </div>
                         </div>
                       </td>
-                      <td className="small">{s.role || <span className="muted">—</span>}</td>
-                      <td><span className={`badge ${s.pay_type === "ot" ? "badge-amber" : s.pay_type === "adv" ? "badge-navy" : "badge-gray"}`}>{PAY_TYPES.find((t) => t.value === s.pay_type)?.label ?? "Salary"}</span></td>
-                      <td><span className="badge badge-navy">{s.passport_number}</span></td>
-                      <td className="small muted">{s.note || "—"}</td>
-                      <td className="num strong">{sar(s.amount)}</td>
+                      <td className="small">
+                        <div className="strong">{r.company_name}</div>
+                        <div className="tiny muted">{r.project_name}</div>
+                      </td>
+                      <td className="num">{r.has_record ? money(r.basic_amount) : <span className="muted">—</span>}</td>
+                      <td className="num">{r.has_record ? money(r.overtime_amount) : <span className="muted">—</span>}</td>
+                      <td className="num text-orange">{r.advance_amount ? `−${money(r.advance_amount)}` : <span className="muted">—</span>}</td>
+                      <td className="num strong">{r.has_record ? money(r.net_amount) : <span className="muted">—</span>}</td>
+                      <td>
+                        {!r.has_record
+                          ? <span className="badge badge-gray">No record</span>
+                          : r.paid
+                          ? <span className="badge badge-green">Paid</span>
+                          : <span className="badge badge-amber">Unpaid</span>}
+                      </td>
                       <td>
                         <div className="row gap-8" style={{ justifyContent: "flex-end" }}>
-                          <button className="btn btn-ghost btn-sm" onClick={() => { setEditing(s); setShowForm(true); }}><Icon name="edit" size={15} /></button>
-                          <button className="btn btn-danger btn-sm" onClick={() => setDeleting(s)}><Icon name="trash" size={15} /></button>
+                          <button className="btn btn-ghost btn-sm" onClick={() => setPaying(toWorker(r))}>
+                            <Icon name="wallet" size={15} /> {r.has_record ? "Edit pay" : "Record pay"}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -111,27 +149,19 @@ export default function SalariesPage() {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={6} className="strong" style={{ textAlign: "right" }}>Total on this page</td>
-                    <td className="num strong text-navy">{sar(pageTotal)}</td>
-                    <td></td>
+                    <td colSpan={5} className="strong" style={{ textAlign: "right" }}>Net payroll ({monthName(month)} {year})</td>
+                    <td className="num strong text-navy">{money(totals.net)}</td>
+                    <td colSpan={2}></td>
                   </tr>
                 </tfoot>
               </table>
-              <Pagination page={data.page} pages={data.pages} total={data.total} onChange={setPage} />
             </div>
           )}
         </div>
       )}
 
-      {showForm && (
-        <SalaryForm persons={persons} editing={editing}
-          onClose={() => { setShowForm(false); setEditing(null); }}
-          onSaved={() => { setShowForm(false); setEditing(null); load(); }} />
-      )}
-      {deleting && (
-        <Confirm title="Delete salary"
-          message={`Delete the ${sar(deleting.amount)} salary paid to ${deleting.person_name} (passport ${deleting.passport_number})?`}
-          onConfirm={doDelete} onClose={() => setDeleting(null)} busy={busy} />
+      {paying && (
+        <WorkerSalaryModal worker={paying} onClose={() => setPaying(null)} onSaved={load} />
       )}
     </>
   );

@@ -12,9 +12,10 @@ import styles from "./shell.module.css";
 
 const TITLES: Record<string, { title: string; sub: string }> = {
   "/dashboard": { title: "Dashboard", sub: "Company financial overview" },
-  "/expenses": { title: "Expenses", sub: "Track spending by person & category" },
-  "/persons": { title: "People", sub: "Manage team members" },
-  "/salaries": { title: "Salaries", sub: "Monthly payroll records" },
+  "/expenses": { title: "Expenses", sub: "Track office-staff spending by section" },
+  "/persons": { title: "Office Staff", sub: "Inside & outside office team members" },
+  "/workers": { title: "Workers", sub: "Manpower by company & project" },
+  "/salaries": { title: "Payroll", sub: "Monthly worker salary records" },
   "/activity": { title: "Activity Log", sub: "Recent actions across the system" },
   "/users": { title: "System Users", sub: "Portal access management" },
 };

@@ -27,8 +27,9 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "grid" },
   { href: "/expenses", label: "Expenses", icon: "receipt" },
-  { href: "/persons", label: "People", icon: "users" },
-  { href: "/salaries", label: "Salaries", icon: "wallet" },
+  { href: "/persons", label: "Office Staff", icon: "users" },
+  { href: "/workers", label: "Workers", icon: "hardhat" },
+  { href: "/salaries", label: "Payroll", icon: "wallet" },
   { href: "/activity", label: "Activity", icon: "activity" },
   { href: "/users", label: "System Users", icon: "shield", adminOnly: true },
 ];

@@ -21,6 +21,8 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
   const [department, setDepartment] = useState(editing?.department ?? "");
   const [passport, setPassport] = useState(editing?.passport_number ?? "");
   const [phone, setPhone] = useState(editing?.phone ?? "");
+  const [email, setEmail] = useState(editing?.email ?? "");
+  const [location, setLocation] = useState<"inside" | "outside">(editing?.location ?? "inside");
   const [active, setActive] = useState(editing?.is_active ?? true);
   const [saving, setSaving] = useState(false);
 
@@ -40,7 +42,8 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
     setSaving(true);
     const payload = {
       name: name.trim(), role, department,
-      passport_number: passport || null, phone: phone || null, is_active: active,
+      passport_number: passport || null, phone: phone || null,
+      email: email || null, location, is_active: active,
     };
     try {
       if (editing) await api.patch<Person>(`/api/persons/${editing.id}`, payload);
@@ -56,13 +59,13 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
 
   return (
     <Modal
-      title={editing ? "Edit Person" : "Add Person"}
+      title={editing ? "Edit Staff Member" : "Add Office Staff"}
       onClose={onClose}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose} disabled={saving}>Cancel</button>
           <button className="btn btn-primary" onClick={submit} disabled={saving}>
-            {saving ? <span className="spinner" /> : <><Icon name="check" size={16} /> {editing ? "Save" : "Add person"}</>}
+            {saving ? <span className="spinner" /> : <><Icon name="check" size={16} /> {editing ? "Save" : "Add staff"}</>}
           </button>
         </>
       }
@@ -95,6 +98,19 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
           <div className="field">
             <label>Phone</label>
             <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05x xxx xxxx" />
+          </div>
+        </div>
+        <div className="form-grid">
+          <div className="field">
+            <label>Email</label>
+            <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" />
+          </div>
+          <div className="field">
+            <label>Work location</label>
+            <div className="segmented" style={{ width: "100%" }}>
+              <button type="button" style={{ flex: 1 }} className={location === "inside" ? "active" : ""} onClick={() => setLocation("inside")}>Inside office</button>
+              <button type="button" style={{ flex: 1 }} className={location === "outside" ? "active" : ""} onClick={() => setLocation("outside")}>Outside office</button>
+            </div>
           </div>
         </div>
         <label className="row gap-8" style={{ cursor: "pointer", fontSize: 14 }}>

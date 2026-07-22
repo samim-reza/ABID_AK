@@ -7,6 +7,9 @@ class PersonBase(BaseModel):
     department: str = ""
     passport_number: str | None = None
     phone: str | None = None
+    email: str | None = None
+    # "inside" = works in the office, "outside" = outside-office worker
+    location: str = "inside"
     is_active: bool = True
 
 
@@ -20,6 +23,8 @@ class PersonUpdate(BaseModel):
     department: str | None = None
     passport_number: str | None = None
     phone: str | None = None
+    email: str | None = None
+    location: str | None = None
     is_active: bool | None = None
 
 

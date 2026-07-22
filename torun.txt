@@ -1,0 +1,8 @@
+# Local:  backend → uvicorn app.main:app --reload   |   frontend → npm run dev
+# VPS:    ./deploy.sh up   then   ./deploy.sh ssl
+
+Deployment: docker-compose.yml, backend + frontend Dockerfiles,
+ deploy/nginx.conf (+ SSL variant), and a one-command ./deploy.sh up / 
+ ./deploy.sh ssl (Let's Encrypt for samimreza.me). Perfect root/service 
+ .gitignore and .dockerignore — I confirmed no .env, node_modules, or .venv 
+ can be committed. Plus a full README.

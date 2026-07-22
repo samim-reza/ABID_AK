@@ -29,6 +29,11 @@ const paths: Record<string, React.ReactNode> = {
   trend: <path d="M3 17l6-6 4 4 8-8" />,
   check: <path d="M5 12l4 4 10-10" />,
   building: <><rect x="4" y="3" width="16" height="18" rx="1.5" /><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2" /></>,
+  hardhat: <><path d="M4 16a8 8 0 0 1 16 0" /><path d="M10 8V5.5A1.5 1.5 0 0 1 11.5 4h1A1.5 1.5 0 0 1 14 5.5V8" /><path d="M3 16h18v2H3z" /></>,
+  undo: <><path d="M9 7L4 12l5 5" /><path d="M4 12h11a5 5 0 0 1 0 10h-1" /></>,
+  userX: <><circle cx="9" cy="8" r="3.5" /><path d="M3.5 20a5.5 5.5 0 0 1 11 0" /><path d="M16 8l5 5M21 8l-5 5" /></>,
+  briefcase: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 12h18" /></>,
+  calendar: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></>,
 };
 
 export default function Icon({ name, size = 20, className }: Props) {

@@ -12,10 +12,13 @@ import Icon from "@/components/Icons";
 import { useToast } from "@/components/Toast";
 import ui from "@/components/ui.module.css";
 
-export default function PersonsPage() {
+type Loc = "" | "inside" | "outside";
+
+export default function OfficeStaffPage() {
   const toast = useToast();
   const [data, setData] = useState<Page<Person> | null>(null);
   const [q, setQ] = useState("");
+  const [location, setLocation] = useState<Loc>("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -25,18 +28,18 @@ export default function PersonsPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    api.get<Page<Person>>("/api/persons", { q: q || undefined, page, page_size: 15 })
+    api.get<Page<Person>>("/api/persons", { q: q || undefined, location: location || undefined, page, page_size: 15 })
       .then(setData).finally(() => setLoading(false));
-  }, [q, page]);
+  }, [q, location, page]);
   useEffect(load, [load]);
-  useEffect(() => setPage(1), [q]);
+  useEffect(() => setPage(1), [q, location]);
 
   async function doDelete() {
     if (!deleting) return;
     setBusy(true);
     try {
       await api.delete(`/api/persons/${deleting.id}`);
-      toast.success("Person removed.");
+      toast.success("Staff member removed.");
       setDeleting(null);
       load();
     } catch (err) {
@@ -49,13 +52,20 @@ export default function PersonsPage() {
   return (
     <>
       <div className={ui.toolbar}>
-        <div className={ui.searchBox}>
-          <Icon name="search" size={17} />
-          <input className="input" placeholder="Search people…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="segmented">
+          <button className={location === "" ? "active" : ""} onClick={() => setLocation("")}>All</button>
+          <button className={location === "inside" ? "active" : ""} onClick={() => setLocation("inside")}>Inside office</button>
+          <button className={location === "outside" ? "active" : ""} onClick={() => setLocation("outside")}>Outside office</button>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditing(null); setShowForm(true); }}>
-          <Icon name="plus" size={17} /> Add Person
-        </button>
+        <div className="row gap-8 wrap">
+          <div className={ui.searchBox}>
+            <Icon name="search" size={17} />
+            <input className="input" placeholder="Search name, passport, email…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <button className="btn btn-primary" onClick={() => { setEditing(null); setShowForm(true); }}>
+            <Icon name="plus" size={17} /> Add Staff
+          </button>
+        </div>
       </div>
 
       {loading && !data ? (
@@ -63,12 +73,12 @@ export default function PersonsPage() {
       ) : (
         <div className="card">
           {!data || data.items.length === 0 ? (
-            <EmptyState title="No people yet" hint="Add your first team member to get started." />
+            <EmptyState title="No office staff yet" hint="Add your first office-staff member to get started." />
           ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>Name</th><th>Role</th><th>Department</th><th>Passport</th><th>Phone</th><th>Status</th><th></th></tr>
+                  <tr><th>Name</th><th>Role</th><th>Department</th><th>Location</th><th>Passport</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr>
                 </thead>
                 <tbody>
                   {data.items.map((p) => (
@@ -81,8 +91,14 @@ export default function PersonsPage() {
                       </td>
                       <td className="small">{p.role || <span className="muted">—</span>}</td>
                       <td className="small muted">{p.department || "—"}</td>
+                      <td>
+                        <span className={`badge ${p.location === "outside" ? "badge-amber" : "badge-navy"}`}>
+                          {p.location === "outside" ? "Outside office" : "Inside office"}
+                        </span>
+                      </td>
                       <td className="small">{p.passport_number || <span className="muted">—</span>}</td>
                       <td className="small">{p.phone || <span className="muted">—</span>}</td>
+                      <td className="small">{p.email || <span className="muted">—</span>}</td>
                       <td>{p.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-gray">Inactive</span>}</td>
                       <td>
                         <div className="row gap-8" style={{ justifyContent: "flex-end" }}>
@@ -105,8 +121,8 @@ export default function PersonsPage() {
           onSaved={() => { setShowForm(false); setEditing(null); load(); }} />
       )}
       {deleting && (
-        <Confirm title="Remove person"
-          message={`Remove ${deleting.name}? All of their expenses and salary records will also be deleted.`}
+        <Confirm title="Remove staff member"
+          message={`Remove ${deleting.name}? All of their expense records will also be deleted.`}
           confirmLabel="Remove" onConfirm={doDelete} onClose={() => setDeleting(null)} busy={busy} />
       )}
     </>

@@ -105,6 +105,12 @@ table.data td { padding: 13px 14px; border-bottom: 1px solid #eef1f6; vertical-a
 table.data tbody tr:hover { background: #f9fbfe; }
 table.data tbody tr:last-child td { border-bottom: none; }
 .num { font-variant-numeric: tabular-nums; text-align: right; }
+table.data th.num { text-align: right; }
+
+/* danger row (released worker or expired iqama) */
+table.data tbody tr.danger { background: var(--red-bg); }
+table.data tbody tr.danger:hover { background: #f6dada; }
+table.data tbody tr.danger td { border-bottom-color: #f3d2d2; }
 
 /* ---------- Avatar ---------- */
 .avatar {

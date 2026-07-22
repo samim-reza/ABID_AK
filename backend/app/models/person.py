@@ -16,6 +16,11 @@ class Person(Base, TimestampMixin):
     department: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     passport_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    # where this office-staff member works: "inside" (in the office) or "outside"
+    location: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="inside", server_default="inside"
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     expenses = relationship("Expense", back_populates="person", cascade="all, delete-orphan")

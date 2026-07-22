@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import Expense, Person, Salary
+from app.models import Expense, Person, WorkerSalary
 from app.schemas.dashboard import DashboardStats, MonthlyPoint
 from app.schemas.expense import CategorySummary
 from app.schemas.person import PersonSummary
@@ -20,14 +20,15 @@ def stats(
     month: int | None = Query(None, ge=1, le=12),
     year: int | None = None,
 ) -> DashboardStats:
+    net = WorkerSalary.basic_amount + WorkerSalary.overtime_amount - WorkerSalary.advance_amount
     exp = select(Expense)
-    sal = select(Salary)
+    sal = select(net.label("amount"))
     if month:
         exp = exp.where(Expense.month == month)
-        sal = sal.where(Salary.month == month)
+        sal = sal.where(WorkerSalary.month == month)
     if year:
         exp = exp.where(Expense.year == year)
-        sal = sal.where(Salary.year == year)
+        sal = sal.where(WorkerSalary.year == year)
     exp_sub, sal_sub = exp.subquery(), sal.subquery()
 
     total_amount = db.scalar(select(func.coalesce(func.sum(exp_sub.c.amount), 0))) or 0
@@ -91,11 +92,12 @@ def stats(
 @router.get("/monthly", response_model=list[MonthlyPoint])
 def monthly(db: Session = Depends(get_db), year: int | None = None) -> list[MonthlyPoint]:
     """Expense/VAT/salary totals per month for the trend chart."""
+    net = WorkerSalary.basic_amount + WorkerSalary.overtime_amount - WorkerSalary.advance_amount
     exp = select(Expense.year, Expense.month, func.sum(Expense.total), func.sum(Expense.vat_amount)).group_by(Expense.year, Expense.month)
-    sal = select(Salary.year, Salary.month, func.sum(Salary.amount)).group_by(Salary.year, Salary.month)
+    sal = select(WorkerSalary.year, WorkerSalary.month, func.sum(net)).group_by(WorkerSalary.year, WorkerSalary.month)
     if year:
         exp = exp.where(Expense.year == year)
-        sal = sal.where(Salary.year == year)
+        sal = sal.where(WorkerSalary.year == year)
 
     buckets: dict[tuple[int, int], MonthlyPoint] = {}
     for y, m, tot, vat in db.execute(exp).all():
@@ -113,5 +115,5 @@ def monthly(db: Session = Depends(get_db), year: int | None = None) -> list[Mont
 @router.get("/periods", response_model=list[int])
 def available_years(db: Session = Depends(get_db)) -> list[int]:
     years = {r[0] for r in db.execute(select(Expense.year).distinct()).all()}
-    years |= {r[0] for r in db.execute(select(Salary.year).distinct()).all()}
+    years |= {r[0] for r in db.execute(select(WorkerSalary.year).distinct()).all()}
     return sorted(years, reverse=True)

@@ -21,7 +21,76 @@ export interface Person {
   department: string;
   passport_number: string | null;
   phone: string | null;
+  email: string | null;
+  location: "inside" | "outside";
   is_active: boolean;
+}
+
+export interface Project {
+  id: number;
+  company_id: number;
+  name: string;
+  worker_count: number;
+}
+
+export interface Company {
+  id: number;
+  name: string;
+  projects: Project[];
+  worker_count: number;
+}
+
+export interface Worker {
+  id: number;
+  name: string;
+  nationality: string;
+  passport_number: string | null;
+  iqama_number: string | null;
+  iqama_expiry: string | null;
+  phone: string | null;
+  company_id: number;
+  project_id: number;
+  pay_type: "monthly" | "hourly";
+  base_rate: number;
+  note: string | null;
+  is_released: boolean;
+  released_at: string | null;
+  company_name: string | null;
+  project_name: string | null;
+}
+
+export interface WorkerSalary {
+  id: number;
+  worker_id: number;
+  worker_name: string | null;
+  year: number;
+  month: number;
+  basic_amount: number;
+  overtime_amount: number;
+  advance_amount: number;
+  hours: number | null;
+  net_amount: number;
+  paid: boolean;
+  pay_date: string | null;
+  note: string | null;
+}
+
+export interface PayrollRow {
+  worker_id: number;
+  name: string;
+  nationality: string;
+  company_name: string | null;
+  project_name: string | null;
+  pay_type: "monthly" | "hourly";
+  base_rate: number;
+  is_released: boolean;
+  salary_id: number | null;
+  basic_amount: number;
+  overtime_amount: number;
+  advance_amount: number;
+  net_amount: number;
+  paid: boolean;
+  has_record: boolean;
 }
 
 export interface PersonSummary {
