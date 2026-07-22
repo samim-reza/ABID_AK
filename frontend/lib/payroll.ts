@@ -1,4 +1,4 @@
-/** Standard monthly working hours used for hourly-worker basic and monthly OT rate. */
+/** Standard monthly working hours — full-month basic ↔ hours are linked via this. */
 export const MONTHLY_HOURS = 260;
 
 export function defaultBasic(payType: string, baseRate: number): number {
@@ -6,10 +6,22 @@ export function defaultBasic(payType: string, baseRate: number): number {
   return baseRate;
 }
 
-/** Hourly rate used to convert overtime hours → SAR. */
+/** Effective SAR/hour from worker pay type + base rate (same basis as OT). */
 export function overtimeHourlyRate(payType: string, baseRate: number): number {
   if (payType === "hourly") return baseRate;
   return baseRate / MONTHLY_HOURS;
+}
+
+/** Basic / total amount from hours worked (linked fields). */
+export function basicFromHours(payType: string, baseRate: number, hours: number): number {
+  return +(overtimeHourlyRate(payType, baseRate) * hours).toFixed(2);
+}
+
+/** Hours worked from basic / total amount (linked fields). */
+export function hoursFromBasic(payType: string, baseRate: number, basic: number): number {
+  const rate = overtimeHourlyRate(payType, baseRate);
+  if (!rate) return 0;
+  return +(basic / rate).toFixed(2);
 }
 
 export function calcOvertimeAmount(payType: string, baseRate: number, hours: number): number {
