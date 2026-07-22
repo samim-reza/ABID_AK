@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.activity_log import log_activity
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import Company, Project, User, Worker, WorkerSalary
+from app.models import Company, Invoice, Project, User, Worker, WorkerSalary
 from app.schemas.common import Page
 from app.schemas.worker import (
     CompanyCreate,
@@ -120,6 +120,8 @@ def delete_company(
         raise HTTPException(status_code=404, detail="Company not found")
     if db.scalar(select(func.count()).select_from(Worker).where(Worker.company_id == company_id)):
         raise HTTPException(status_code=400, detail="Remove or reassign this company's workers first")
+    if db.scalar(select(func.count()).select_from(Invoice).where(Invoice.company_id == company_id)):
+        raise HTTPException(status_code=400, detail="Delete this company's invoices first")
     name = company.name
     log_activity(db, user=user, action="deleted", entity="company", entity_id=company_id,
                  description=f"Deleted company {name}")

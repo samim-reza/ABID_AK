@@ -22,6 +22,8 @@ export interface NavItem {
   label: string;
   icon: string;
   adminOnly?: boolean;
+  /** Optional accent key; sets this item apart from the orange default. */
+  accent?: "teal";
 }
 
 export const NAV: NavItem[] = [
@@ -30,6 +32,7 @@ export const NAV: NavItem[] = [
   { href: "/persons", label: "Office Staff", icon: "users" },
   { href: "/workers", label: "Workers", icon: "hardhat" },
   { href: "/salaries", label: "Payroll", icon: "wallet" },
+  { href: "/invoices", label: "Invoice", icon: "file", accent: "teal" },
   { href: "/activity", label: "Activity", icon: "activity" },
   { href: "/users", label: "System Users", icon: "shield", adminOnly: true },
 ];

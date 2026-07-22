@@ -45,3 +45,7 @@ Thumbs.db
 # ---------- Build artefacts ----------
 dist/
 coverage/
+
+# ---------- Uploaded invoice PDFs (local dev) ----------
+uploads/
+backend/uploads/

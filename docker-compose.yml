@@ -9,6 +9,8 @@ services:
       - ./backend/.env
     expose:
       - "8000"
+    volumes:
+      - invoice_uploads:/data/uploads
     networks:
       - abidak
     healthcheck:
@@ -50,6 +52,9 @@ services:
       - ./deploy/certbot/conf:/etc/letsencrypt:ro
     networks:
       - abidak
+
+volumes:
+  invoice_uploads:
 
 networks:
   abidak:

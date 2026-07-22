@@ -42,7 +42,10 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let payload: BodyInit | undefined;
-  if (body instanceof URLSearchParams) {
+  if (body instanceof FormData) {
+    // let the browser set the multipart boundary
+    payload = body;
+  } else if (body instanceof URLSearchParams) {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
     payload = body;
   } else if (body !== undefined) {
@@ -74,7 +77,19 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
   return (await res.json()) as T;
 }
 
+/** Fetch a protected file as a Blob (downloads/previews can't send headers via <a>). */
+async function blob(path: string, params?: Params): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}${path}${qs(params)}`, { headers });
+  if (!res.ok) throw new ApiError(res.statusText || "Download failed", res.status);
+  return res.blob();
+}
+
 export const api = {
+  blob,
+  upload: <T>(path: string, form: FormData) => request<T>("POST", path, form),
   get: <T>(path: string, params?: Params) => request<T>("GET", path, undefined, params),
   post: <T>(path: string, body?: unknown, params?: Params) => request<T>("POST", path, body, params),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),

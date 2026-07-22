@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # --- VAT ---
     vat_rate: float = 0.15  # Saudi Arabia standard VAT
 
+    # --- Invoice PDF storage (self-contained; unrelated to expenses/payroll) ---
+    upload_dir: str = "uploads"  # absolute in Docker (/data/uploads), relative in dev
+    max_upload_mb: int = 20  # rejected above this; nginx must allow at least as much
+    compress_pdfs: bool = True  # lossless re-compression on upload when pikepdf is present
+
     # --- CORS ---
     cors_origins: str = "http://localhost:3000,https://samimreza.me"
 

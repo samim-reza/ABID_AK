@@ -1,0 +1,42 @@
+/* Invoice section — teal-accented so it reads apart from the orange app. */
+
+.calcBox {
+  background: var(--teal-100); border: 1px solid rgba(13, 148, 136, 0.22);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+}
+.calcBox > div { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13.5px; }
+.calcBox span { color: var(--muted); font-weight: 600; }
+.calcBox b { font-variant-numeric: tabular-nums; }
+.calcTotal { border-top: 1px dashed rgba(13, 148, 136, 0.35); margin-top: 4px; padding-top: 9px !important; }
+.calcTotal b { font-size: 16px; color: var(--teal-600); }
+
+.drop {
+  display: flex; align-items: center; gap: 14px; padding: 18px;
+  border: 1.5px dashed rgba(13, 148, 136, 0.45); border-radius: var(--radius-sm);
+  background: #f7fdfc; color: var(--teal-600); cursor: pointer; transition: all 0.15s;
+}
+.drop:hover { background: var(--teal-100); border-color: var(--teal); }
+.dropFilled { border-style: solid; background: var(--teal-100); }
+
+/* stat tiles in teal */
+.statTeal { border-color: rgba(13, 148, 136, 0.25); }
+.statTeal::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--teal);
+}
+
+.fileCell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fileIcon {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--teal-100); color: var(--teal-600);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.fileName { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* company chips */
+.companyBar { display: flex; gap: 8px; padding: 14px 16px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.chip {
+  border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 14px;
+  font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap;
+}
+.chip:hover { border-color: var(--teal); color: var(--teal-600); }
+.chipActive { background: var(--teal); border-color: var(--teal); color: #fff; }
+.chipActive:hover { color: #fff; }

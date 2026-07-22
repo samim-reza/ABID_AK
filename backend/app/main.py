@@ -11,6 +11,7 @@ from app.routers import (
     auth,
     dashboard,
     expenses,
+    invoices,
     persons,
     roles,
     salaries,
@@ -47,7 +48,7 @@ app.add_middleware(
 )
 
 api = settings.api_v1_prefix
-for r in (auth, users, persons, roles, expenses, salaries, workers, activity, dashboard):
+for r in (auth, users, persons, roles, expenses, salaries, workers, activity, dashboard, invoices):
     app.include_router(r.router, prefix=api)
 
 

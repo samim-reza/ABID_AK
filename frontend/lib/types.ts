@@ -183,3 +183,38 @@ export interface MonthlyPoint {
   vat: number;
   salaries: number;
 }
+
+/* ---------- Invoice archive (standalone: never mixed with expenses/payroll) ---------- */
+export interface Invoice {
+  id: number;
+  company_id: number;
+  company_name: string | null;
+  invoice_number: string | null;
+  description: string;
+  amount: number;
+  vat_rate: number;
+  vat_amount: number;
+  total: number;
+  invoice_date: string;
+  month: number;
+  year: number;
+  file_name: string;
+  file_size: number;
+  created_at: string;
+}
+
+export interface InvoiceCompanySummary {
+  company_id: number;
+  company_name: string;
+  invoice_count: number;
+  total_amount: number;
+  total_vat: number;
+  grand_total: number;
+}
+
+export interface InvoiceTotals {
+  invoice_count: number;
+  total_amount: number;
+  total_vat: number;
+  grand_total: number;
+}

@@ -15,6 +15,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
+# Invoice PDFs live here; mount a volume so they survive rebuilds.
+ENV UPLOAD_DIR=/data/uploads
+RUN mkdir -p /data/uploads
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

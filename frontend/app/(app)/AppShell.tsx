@@ -16,6 +16,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "/persons": { title: "Office Staff", sub: "Inside & outside office team members" },
   "/workers": { title: "Workers", sub: "Manpower by company & project" },
   "/salaries": { title: "Payroll", sub: "Monthly worker salary records" },
+  "/invoices": { title: "Invoice Archive", sub: "Company invoice PDFs with 15% VAT" },
   "/activity": { title: "Activity Log", sub: "Recent actions across the system" },
   "/users": { title: "System Users", sub: "Portal access management" },
 };
@@ -56,7 +57,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {items.map((item) => {
             const active = pathname === item.href;
             return (
-              <Link key={item.href} href={item.href} className={`${styles.navItem} ${active ? styles.active : ""}`}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.navItem} ${item.accent ? styles[item.accent] : ""} ${active ? styles.active : ""}`}
+              >
                 <Icon name={item.icon} size={19} />
                 {item.label}
               </Link>

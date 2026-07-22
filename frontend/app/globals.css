@@ -18,6 +18,11 @@
   --amber: #d98a0b;
   --amber-bg: #fdf3e2;
 
+  /* Invoice section — deliberately set apart from the orange app accent */
+  --teal: #0d9488;
+  --teal-600: #0b7f75;
+  --teal-100: #dff3f0;
+
   --radius: 14px;
   --radius-sm: 10px;
   --shadow-sm: 0 1px 2px rgba(15, 37, 71, 0.06);
@@ -56,6 +61,8 @@ input, select, textarea { font-family: inherit; }
 .btn-navy:hover:not(:disabled) { background: var(--navy-700); }
 .btn-ghost { background: #fff; color: var(--navy); border-color: var(--line); }
 .btn-ghost:hover:not(:disabled) { background: #f8fafc; border-color: #cfd8e6; }
+.btn-teal { background: var(--teal); color: #fff; box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3); }
+.btn-teal:hover:not(:disabled) { background: var(--teal-600); transform: translateY(-1px); }
 .btn-danger { background: var(--red-bg); color: var(--red); }
 .btn-danger:hover:not(:disabled) { background: #f6dada; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
@@ -80,6 +87,9 @@ input, select, textarea { font-family: inherit; }
   outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(242, 111, 33, 0.14);
 }
 .input-error { border-color: var(--red); }
+.teal-scope .input:focus, .teal-scope .select:focus, .teal-scope textarea.input:focus {
+  border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.14);
+}
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
 @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
 
@@ -93,6 +103,7 @@ input, select, textarea { font-family: inherit; }
 .badge-amber { background: var(--amber-bg); color: var(--amber); }
 .badge-navy { background: #e7edf7; color: var(--navy); }
 .badge-gray { background: #eef1f6; color: var(--muted); }
+.badge-teal { background: var(--teal-100); color: var(--teal-600); }
 
 /* ---------- Tables ---------- */
 .table-wrap { overflow-x: auto; }
@@ -131,6 +142,7 @@ table.data tbody tr.danger td { border-bottom-color: #f3d2d2; }
 .text-orange { color: var(--orange); }
 .text-navy { color: var(--navy); }
 .text-green { color: var(--green); }
+.text-teal { color: var(--teal); }
 .grow { flex: 1; }
 .center { text-align: center; }
 

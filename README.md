@@ -20,6 +20,7 @@ all behind a branded login.
 | **Expenses** | Add/edit/delete with **VAT 15% toggle** (live preview), date, reason, and **camera barcode/QR scanning**. Three views: *All Entries*, *By Person*, *By Section* — each with base / VAT / grand totals. |
 | **People** | Full CRUD. Roles are pre-loaded from the company manpower list (78 roles across 12 departments). Passport & phone per person. |
 | **Salaries** | Record monthly salary per employee **against a passport number**, with role captured at payment time. Filter by person / month / year. |
+| **Invoice** (teal section) | Per-company invoice archive: upload a **PDF**, enter the invoice amount and the **15% VAT is calculated automatically**. View or download any invoice at any time. Views: *All Invoices* and *By Company*. Self-contained — these amounts never feed the dashboard, expenses or payroll. |
 | **Activity Log** | Every create / update / delete / login recorded with user, entity and timestamp. |
 | **System Users** | Admin-only management of who can access the portal. |
 | **Everywhere** | Server-side pagination, toasts, modals, responsive layout, month/year filtering. |
@@ -110,6 +111,9 @@ whole app runs on a single origin (no CORS headaches in production).
 | `SECRET_KEY` | JWT signing key — **set a long random value in production**. |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Bootstrap admin, created only if no users exist. |
 | `VAT_RATE` | Default `0.15` (Saudi standard rate). |
+| `UPLOAD_DIR` | Where invoice PDFs are stored. Docker sets `/data/uploads` (named volume `invoice_uploads`). |
+| `MAX_UPLOAD_MB` | Upload cap, default `20`. Keep nginx's `client_max_body_size` (25m) above it. |
+| `COMPRESS_PDFS` | Lossless re-compression on upload via pikepdf; the smaller file wins. |
 | `CORS_ORIGINS` | Comma-separated allowed origins (dev only; production is same-origin). |
 | `SUPABASE_PROJECT_REF` / `SUPABASE_DB_PASSWORD` / `SUPABASE_POOLER_HOST` / `SUPABASE_POOLER_PORT` | Supabase Postgres pooler connection. A full `DATABASE_URL` overrides these. |
 
@@ -120,8 +124,18 @@ whole app runs on a single origin (no CORS headaches in production).
 - **Person** — name, role, department, passport, phone, active.
 - **Expense** — person, category (section), reason, barcode, amount, `vat_applied`, `vat_amount`, `total`, date (month/year indexed).
 - **Salary** — person, role, **passport_number**, amount, pay date (month/year), note.
+- **Invoice** — company, invoice number, description, amount, `vat_rate`, `vat_amount`, `total`, invoice date (month/year indexed), and the stored PDF (original name, size, checksum). Kept isolated from expense/payroll figures.
 - **Activity** — user, action, entity, description, timestamp.
 - **Role** — 78 seeded roles across Technicians, Civil, Rigging, Structural, Piping, Scaffolding, Welding, Painting, E&I, Safety, Equipment Operators and Management.
+
+## 📄 Invoice PDF Storage
+
+PDFs are written to disk under `UPLOAD_DIR` (never into Postgres) and served back through an
+authenticated endpoint — the frontend fetches them as blobs, so files are never publicly linkable.
+Uploads are streamed in 1 MB chunks (large files never sit in memory), verified to be real PDFs by
+magic bytes, capped at `MAX_UPLOAD_MB`, and losslessly re-compressed with pikepdf. In Docker the
+`invoice_uploads` volume keeps files across rebuilds; back it up with
+`docker run --rm -v abid_ak_invoice_uploads:/data -v $PWD:/backup alpine tar czf /backup/invoices.tgz /data`.
 
 ## 📷 Barcode Scanning
 
