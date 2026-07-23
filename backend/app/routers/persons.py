@@ -7,11 +7,23 @@ from sqlalchemy.orm import Session
 from app.activity_log import log_activity
 from app.database import get_db
 from app.deps import get_current_user
-from app.models import Expense, Person, User
+from app.models import Expense, Person, PersonSalary, User
 from app.schemas.common import Page
-from app.schemas.person import PersonCreate, PersonOut, PersonSummary, PersonUpdate
+from app.schemas.person import (
+    PersonCreate,
+    PersonOut,
+    PersonPayrollRow,
+    PersonSalaryOut,
+    PersonSalaryUpsert,
+    PersonSummary,
+    PersonUpdate,
+)
 
 router = APIRouter(prefix="/persons", tags=["persons"], dependencies=[Depends(get_current_user)])
+
+
+def _person_net(salary: float, advance: float) -> float:
+    return float(salary) - float(advance)
 
 
 @router.get("", response_model=Page[PersonOut])
@@ -95,6 +107,130 @@ def persons_summary(
         )
         for r in db.execute(stmt).all()
     ]
+
+
+# ======================================================================
+# Office-staff monthly payroll (must be registered before /{person_id})
+# ======================================================================
+
+
+def _person_salary_out(s: PersonSalary) -> PersonSalaryOut:
+    out = PersonSalaryOut.model_validate(s)
+    out.person_name = s.person.name if s.person else None
+    out.net_amount = _person_net(s.salary_amount, s.advance_amount)
+    return out
+
+
+@router.get("/payroll", response_model=list[PersonPayrollRow])
+def payroll(
+    db: Session = Depends(get_db),
+    year: int = Query(..., ge=2000, le=2100),
+    month: int = Query(..., ge=1, le=12),
+    location: str | None = None,
+    active_only: bool = True,
+) -> list[PersonPayrollRow]:
+    stmt = select(Person)
+    if location in ("inside", "outside"):
+        stmt = stmt.where(Person.location == location)
+    if active_only:
+        stmt = stmt.where(Person.is_active.is_(True))
+    persons = db.scalars(stmt.order_by(Person.name)).all()
+
+    sal_map = {
+        s.person_id: s
+        for s in db.scalars(
+            select(PersonSalary).where(
+                PersonSalary.year == year, PersonSalary.month == month
+            )
+        ).all()
+    }
+
+    rows: list[PersonPayrollRow] = []
+    for p in persons:
+        s = sal_map.get(p.id)
+        monthly = float(p.monthly_salary)
+        row = PersonPayrollRow(
+            person_id=p.id, name=p.name, role=p.role, department=p.department,
+            location=p.location, monthly_salary=monthly, is_active=p.is_active,
+            suggested_salary=monthly,
+        )
+        if s:
+            row.salary_id = s.id
+            row.has_record = True
+            row.salary_amount = float(s.salary_amount)
+            row.advance_amount = float(s.advance_amount)
+            row.net_amount = _person_net(s.salary_amount, s.advance_amount)
+            row.paid = s.paid
+        rows.append(row)
+    return rows
+
+
+@router.put("/salaries", response_model=PersonSalaryOut)
+def upsert_salary(
+    payload: PersonSalaryUpsert, db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> PersonSalaryOut:
+    person = db.get(Person, payload.person_id)
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+    salary = db.scalar(
+        select(PersonSalary).where(
+            PersonSalary.person_id == payload.person_id,
+            PersonSalary.year == payload.year,
+            PersonSalary.month == payload.month,
+        )
+    )
+    creating = salary is None
+    if creating:
+        salary = PersonSalary(
+            person_id=payload.person_id, year=payload.year, month=payload.month,
+            created_by=user.id,
+        )
+        db.add(salary)
+    salary.salary_amount = payload.salary_amount
+    salary.advance_amount = payload.advance_amount
+    salary.paid = payload.paid
+    salary.pay_date = payload.pay_date
+    salary.note = payload.note
+    db.flush()
+    net = _person_net(salary.salary_amount, salary.advance_amount)
+    log_activity(
+        db, user=user, action="created" if creating else "updated", entity="person_salary",
+        entity_id=salary.id,
+        description=f"{person.name} {payload.month:02d}/{payload.year}: net SAR {net:.2f}"
+        f"{' (paid)' if payload.paid else ''}",
+    )
+    db.commit()
+    db.refresh(salary)
+    return _person_salary_out(salary)
+
+
+@router.delete("/salaries/{salary_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_salary(
+    salary_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> None:
+    salary = db.get(PersonSalary, salary_id)
+    if not salary:
+        raise HTTPException(status_code=404, detail="Salary record not found")
+    log_activity(db, user=user, action="deleted", entity="person_salary", entity_id=salary_id,
+                 description=f"Deleted office-staff pay record #{salary_id}")
+    db.delete(salary)
+    db.commit()
+
+
+@router.get("/{person_id}/salaries", response_model=list[PersonSalaryOut])
+def person_salaries(
+    person_id: int, db: Session = Depends(get_db), year: int | None = None
+) -> list[PersonSalaryOut]:
+    if not db.get(Person, person_id):
+        raise HTTPException(status_code=404, detail="Person not found")
+    stmt = select(PersonSalary).where(PersonSalary.person_id == person_id)
+    if year:
+        stmt = stmt.where(PersonSalary.year == year)
+    rows = db.scalars(
+        stmt.order_by(PersonSalary.year.desc(), PersonSalary.month.desc())
+    ).all()
+    return [_person_salary_out(r) for r in rows]
 
 
 @router.get("/{person_id}", response_model=PersonOut)

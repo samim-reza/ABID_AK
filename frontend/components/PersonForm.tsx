@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { COMPANY } from "@/lib/brand";
 import type { Person, Role } from "@/lib/types";
 import Modal from "./Modal";
 import Icon from "./Icons";
@@ -25,6 +26,7 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
   const [phone, setPhone] = useState(editing?.phone ?? "");
   const [email, setEmail] = useState(editing?.email ?? "");
   const [location, setLocation] = useState<"inside" | "outside">(editing?.location ?? "inside");
+  const [monthlySalary, setMonthlySalary] = useState(editing ? String(editing.monthly_salary) : "");
   const [active, setActive] = useState(editing?.is_active ?? true);
   const [saving, setSaving] = useState(false);
 
@@ -48,7 +50,9 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
       iqama_number: iqama || null,
       iqama_expiry: iqamaExpiry || null,
       phone: phone || null,
-      email: email || null, location, is_active: active,
+      email: email || null, location,
+      monthly_salary: parseFloat(monthlySalary) || 0,
+      is_active: active,
     };
     try {
       if (editing) await api.patch<Person>(`/api/persons/${editing.id}`, payload);
@@ -119,6 +123,11 @@ export default function PersonForm({ editing, onClose, onSaved }: Props) {
             <label>Email</label>
             <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" />
           </div>
+        </div>
+        <div className="field">
+          <label>Monthly salary ({COMPANY.currency})</label>
+          <input className="input" type="number" step="0.01" min="0" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} placeholder="0.00" />
+          <span className="hint">Used to prefill each month&apos;s payroll record.</span>
         </div>
         <div className="field">
           <label>Work location</label>

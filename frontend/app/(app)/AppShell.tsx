@@ -13,7 +13,7 @@ import styles from "./shell.module.css";
 const TITLES: Record<string, { title: string; sub: string }> = {
   "/dashboard": { title: "Dashboard", sub: "Company financial overview" },
   "/expenses": { title: "Expenses", sub: "Track office-staff spending by section" },
-  "/persons": { title: "Office Staff", sub: "Inside & outside office team members" },
+  "/persons": { title: "Office Staff", sub: "Team, monthly salaries & iqama tracking" },
   "/workers": { title: "Workers", sub: "Manpower by company & project" },
   "/salaries": { title: "Payroll", sub: "Monthly worker salary records" },
   "/invoices": { title: "Invoice Archive", sub: "Company invoice PDFs with 15% VAT" },

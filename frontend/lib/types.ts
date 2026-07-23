@@ -25,7 +25,39 @@ export interface Person {
   phone: string | null;
   email: string | null;
   location: "inside" | "outside";
+  monthly_salary: number;
   is_active: boolean;
+}
+
+export interface PersonSalary {
+  id: number;
+  person_id: number;
+  person_name: string | null;
+  year: number;
+  month: number;
+  salary_amount: number;
+  advance_amount: number;
+  net_amount: number;
+  paid: boolean;
+  pay_date: string | null;
+  note: string | null;
+}
+
+export interface PersonPayrollRow {
+  person_id: number;
+  name: string;
+  role: string;
+  department: string;
+  location: "inside" | "outside";
+  monthly_salary: number;
+  is_active: boolean;
+  salary_id: number | null;
+  suggested_salary: number;
+  salary_amount: number;
+  advance_amount: number;
+  net_amount: number;
+  paid: boolean;
+  has_record: boolean;
 }
 
 export interface Project {
