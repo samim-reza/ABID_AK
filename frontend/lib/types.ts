@@ -250,3 +250,131 @@ export interface InvoiceTotals {
   total_vat: number;
   grand_total: number;
 }
+
+// ---------- Accounting ----------
+export type AccountType = "asset" | "liability" | "equity" | "income" | "expense";
+
+export interface Account {
+  id: number;
+  code: string;
+  name: string;
+  account_type: AccountType;
+  parent_id: number | null;
+  is_group: boolean;
+  is_active: boolean;
+  description: string;
+  normal_balance: "debit" | "credit";
+}
+
+export interface AccountNode extends Account {
+  balance: number;
+  children: AccountNode[];
+}
+
+export interface JournalLine {
+  id: number;
+  account_id: number;
+  account_code: string | null;
+  account_name: string | null;
+  line_no: number;
+  description: string;
+  debit: number;
+  credit: number;
+}
+
+export interface JournalEntry {
+  id: number;
+  entry_no: string;
+  entry_date: string;
+  year: number;
+  month: number;
+  memo: string;
+  reference: string | null;
+  source: string;
+  status: "draft" | "posted" | "void";
+  total_debit: number;
+  total_credit: number;
+  posted_at: string | null;
+  created_at: string;
+  lines: JournalLine[];
+}
+
+export interface FiscalPeriod {
+  id: number;
+  year: number;
+  month: number;
+  is_closed: boolean;
+  closed_at: string | null;
+}
+
+export interface TrialBalanceRow {
+  account_id: number;
+  code: string;
+  name: string;
+  account_type: AccountType;
+  debit: number;
+  credit: number;
+}
+
+export interface TrialBalance {
+  from_date: string;
+  to_date: string;
+  rows: TrialBalanceRow[];
+  total_debit: number;
+  total_credit: number;
+}
+
+export interface LedgerLine {
+  date: string;
+  entry_no: string;
+  entry_id: number;
+  memo: string;
+  reference: string | null;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface GeneralLedger {
+  account_id: number;
+  code: string;
+  name: string;
+  normal_balance: "debit" | "credit";
+  from_date: string;
+  to_date: string;
+  opening_balance: number;
+  lines: LedgerLine[];
+  closing_balance: number;
+}
+
+export interface ReportLine {
+  account_id: number;
+  code: string;
+  name: string;
+  amount: number;
+}
+
+export interface ReportSection {
+  title: string;
+  lines: ReportLine[];
+  total: number;
+}
+
+export interface IncomeStatement {
+  from_date: string;
+  to_date: string;
+  income: ReportSection;
+  expenses: ReportSection;
+  net_profit: number;
+}
+
+export interface BalanceSheet {
+  as_of: string;
+  assets: ReportSection;
+  liabilities: ReportSection;
+  equity: ReportSection;
+  net_profit: number;
+  total_assets: number;
+  total_liabilities_equity: number;
+  balanced: boolean;
+}

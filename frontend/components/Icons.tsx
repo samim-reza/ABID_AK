@@ -38,6 +38,11 @@ const paths: Record<string, React.ReactNode> = {
   download: <><path d="M12 4v12" /><path d="M8 12l4 4 4-4" /><path d="M4 18v0a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2" /></>,
   eye: <><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>,
   calendar: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></>,
+  book: <><path d="M5 4a2 2 0 0 1 2-2h12v18H7a2 2 0 0 0-2 2z" /><path d="M5 20a2 2 0 0 1 2-2h12" /><path d="M9 6h7M9 9h7" /></>,
+  ledger: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /><path d="M4 8h4" /></>,
+  scale: <><path d="M12 3v18M7 21h10" /><path d="M12 6l-7 2 3 5a3 3 0 0 0 4 0z" /><path d="M12 6l7 2-3 5a3 3 0 0 1-4 0z" /></>,
+  printer: <><path d="M6 9V3h12v6" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M8 17h8v4H8z" /><path d="M17 12.5h.01" /></>,
+  lock: <><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>,
 };
 
 export default function Icon({ name, size = 20, className }: Props) {

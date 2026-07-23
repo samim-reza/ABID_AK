@@ -17,6 +17,9 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "/workers": { title: "Workers", sub: "Manpower by company & project" },
   "/salaries": { title: "Payroll", sub: "Monthly worker salary records" },
   "/invoices": { title: "Invoice Archive", sub: "Company invoice PDFs with 15% VAT" },
+  "/accounts": { title: "Chart of Accounts", sub: "The account tree behind every ledger posting" },
+  "/journal": { title: "General Journal", sub: "Double-entry vouchers — the audit source of truth" },
+  "/reports": { title: "Financial Reports", sub: "Trial balance, P&L, balance sheet & ledger" },
   "/activity": { title: "Activity Log", sub: "Recent actions across the system" },
   "/users": { title: "System Users", sub: "Portal access management" },
 };
@@ -57,14 +60,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {items.map((item) => {
             const active = pathname === item.href;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.navItem} ${item.accent ? styles[item.accent] : ""} ${active ? styles.active : ""}`}
-              >
-                <Icon name={item.icon} size={19} />
-                {item.label}
-              </Link>
+              <div key={item.href}>
+                {item.group && <div className={styles.navGroup}>{item.group}</div>}
+                <Link
+                  href={item.href}
+                  className={`${styles.navItem} ${item.accent ? styles[item.accent] : ""} ${active ? styles.active : ""}`}
+                >
+                  <Icon name={item.icon} size={19} />
+                  {item.label}
+                </Link>
+              </div>
             );
           })}
         </nav>

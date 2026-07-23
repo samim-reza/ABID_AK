@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, SessionLocal, engine
 from app.routers import (
+    accounting,
     activity,
     auth,
     dashboard,
@@ -48,7 +49,7 @@ app.add_middleware(
 )
 
 api = settings.api_v1_prefix
-for r in (auth, users, persons, roles, expenses, salaries, workers, activity, dashboard, invoices):
+for r in (auth, users, persons, roles, expenses, salaries, workers, activity, dashboard, invoices, accounting):
     app.include_router(r.router, prefix=api)
 
 

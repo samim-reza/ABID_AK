@@ -24,6 +24,8 @@ export interface NavItem {
   adminOnly?: boolean;
   /** Optional accent key; sets this item apart from the orange default. */
   accent?: "teal";
+  /** Optional group heading rendered above this item in the sidebar. */
+  group?: string;
 }
 
 export const NAV: NavItem[] = [
@@ -33,6 +35,9 @@ export const NAV: NavItem[] = [
   { href: "/workers", label: "Workers", icon: "hardhat" },
   { href: "/salaries", label: "Payroll", icon: "wallet" },
   { href: "/invoices", label: "Invoice", icon: "file", accent: "teal" },
-  { href: "/activity", label: "Activity", icon: "activity" },
+  { href: "/accounts", label: "Chart of Accounts", icon: "book", group: "Accounting" },
+  { href: "/journal", label: "General Journal", icon: "ledger" },
+  { href: "/reports", label: "Financial Reports", icon: "scale" },
+  { href: "/activity", label: "Activity", icon: "activity", group: "System" },
   { href: "/users", label: "System Users", icon: "shield", adminOnly: true },
 ];

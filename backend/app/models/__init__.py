@@ -1,3 +1,4 @@
+from app.models.accounting import Account, FiscalPeriod, JournalEntry, JournalLine
 from app.models.activity import Activity
 from app.models.company import Company, Project
 from app.models.expense import Expense
@@ -21,4 +22,8 @@ __all__ = [
     "Project",
     "Worker",
     "WorkerSalary",
+    "Account",
+    "FiscalPeriod",
+    "JournalEntry",
+    "JournalLine",
 ]

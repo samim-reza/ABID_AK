@@ -11,3 +11,6 @@ Deployment: docker-compose.yml, backend + frontend Dockerfiles,
  ./deploy.sh ssl (Let's Encrypt for samimreza.me). Perfect root/service 
  .gitignore and .dockerignore — I confirmed no .env, node_modules, or .venv 
  can be committed. Plus a full README.
+
+ uvicorn app.main:app --reload
+ nom run dev
